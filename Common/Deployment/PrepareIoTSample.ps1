@@ -2,7 +2,9 @@
     [Parameter(Mandatory=$True,Position=0)]
     $environmentName,
     [Parameter(Mandatory=$True,Position=1)]
-    $configuration
+    $configuration,
+    [Parameter(Mandatory=$True,Position=2)]
+    $mapKey
     )
     
 # Initialize library
@@ -60,7 +62,8 @@ $params = @{ `
     storageName=$($storageAccount.StorageAccountName); `
     iotHubName=$iotHubName; `
     sbName=$sevicebusName; `
-    aadTenant=$($global:AADTenant)}
+    aadTenant=$($global:AADTenant); `
+}
 
 Write-Host "Suite name: $suitename"
 Write-Host "DocDb Name: $docDbName"
@@ -109,6 +112,7 @@ if ($cloudDeploy)
     # Respect existing Sku values
     if ($suiteExists)
     {
+        $params += @{mapKey=$($mapKey)}
         $webSku = GetResourceObject $suitename $suitename Microsoft.Web/sites
         $params += @{webSku=$($webSku.Properties.Sku)}
         $webPlan = GetResourceObject $suiteName ("{0}-plan" -f $suiteName) Microsoft.Web/serverfarms
@@ -155,10 +159,7 @@ UpdateEnvSetting "DocDBKey" $result.Outputs['docDbKey'].Value
 UpdateEnvSetting "DeviceTableName" "DeviceList"
 UpdateEnvSetting "RulesEventHubName" $result.Outputs['ehRuleName'].Value
 UpdateEnvSetting "RulesEventHubConnectionString" $result.Outputs['ehConnectionString'].Value
-if ($result.Outputs['bingMapsQueryKey'].Value.Length -gt 0)
-{
-    UpdateEnvSetting "MapApiQueryKey" $result.Outputs['bingMapsQueryKey'].Value
-}
+UpdateEnvSetting "MapApiQueryKey" $mapKey
 
 Write-Host ("Provisioning and deployment completed successfully, see {0}.config.user for deployment values" -f $environmentName)
 

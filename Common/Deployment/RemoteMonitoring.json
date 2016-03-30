@@ -129,6 +129,12 @@
                 "description": "The start behavior for Stream Analytics jobs [LastStopTime | JobStartTime (default)]"
             },
             "defaultValue": "JobStartTime"
+        },
+        "mapKey": {
+            "type": "string",
+            "metadata": {
+                "description": "Bing map key from bing maps dev center"
+            }
         }
     },
     "variables": {
@@ -142,8 +148,6 @@
         "sbResourceId": "[resourceId('Microsoft.Eventhub/namespaces/authorizationRules', parameters('sbName'), variables('sbKeyName'))]",
         "saVersion": "2015-10-01",
         "webVersion": "2015-04-01",
-        "bingMapsName": "[concat(parameters('suiteName'), '-map')]",
-        "bingMapsVersion": "2015-07-02",
         "webJobPlanName": "[concat(parameters('suiteName'), '-jobsplan')]",
         "webJobSiteName": "[concat(parameters('suiteName'), '-jobhost')]",
         "webPlanName": "[concat(parameters('suiteName'), '-plan')]",
@@ -174,22 +178,6 @@
                 "name": "[parameters('docDBName')]",
                 "databaseAccountOfferType": "[parameters('docDBSku')]"
             }
-        },
-        {
-            "apiVersion": "[variables('bingMapsVersion')]",
-            "type": "Microsoft.BingMaps/mapApis",
-            "name": "[variables('bingMapsName')]",
-            "location": "westus",
-            "plan": {
-                "publisher": "bingmaps",
-                "product": "mapapis",
-                "name": "internal1",
-                "promotionCode": null
-            },
-            "tags": {
-                "IotSuiteType": "[variables('suiteType')]"
-            },
-            "properties": { }
         },
         {
             "apiVersion": "[variables('storageVersion')]",
@@ -637,8 +625,7 @@
                 "[resourceId('Microsoft.Web/serverfarms', variables('webPlanName'))]",
                 "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageName'))]",
                 "[resourceId('Microsoft.DocumentDb/databaseAccounts', parameters('docDBName'))]",
-                "[resourceId('Microsoft.Devices/Iothubs', parameters('iotHubName'))]",
-                "[resourceId('Microsoft.BingMaps/mapApis', variables('bingMapsName'))]"
+                "[resourceId('Microsoft.Devices/Iothubs', parameters('iotHubName'))]"
             ],
             "tags": {
                 "IotSuiteType": "[variables('suiteType')]"
@@ -714,7 +701,7 @@
                         },
                         {
                             "name": "MapApiQueryKey",
-                            "value": "[listSecrets(variables('bingMapsName'), variables('bingMapsVersion')).QueryKey]"
+                            "value": "[parameters('mapKey')]"
                         },
                         {
                             "name": "SolutionName",
@@ -749,7 +736,6 @@
                 "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageName'))]",
                 "[resourceId('Microsoft.DocumentDb/databaseAccounts', parameters('docDBName'))]",
                 "[resourceId('Microsoft.Devices/Iothubs', parameters('iotHubName'))]",
-                "[resourceId('Microsoft.BingMaps/mapApis', variables('bingMapsName'))]",
                 "[resourceId('Microsoft.StreamAnalytics/streamingjobs', concat(parameters('suiteName'), '-Telemetry'))]",
                 "[resourceId('Microsoft.StreamAnalytics/streamingjobs', concat(parameters('suiteName'), '-DeviceInfo'))]",
                 "[resourceId('Microsoft.StreamAnalytics/streamingjobs', concat(parameters('suiteName'), '-Rules'))]"
@@ -828,7 +814,7 @@
                         },
                         {
                             "name": "MapApiQueryKey",
-                            "value": "[listSecrets(variables('bingMapsName'), variables('bingMapsVersion')).QueryKey]"
+                            "value": "[parameters('mapKey')]"
                         },
                         {
                             "name": "SolutionName",
@@ -873,7 +859,7 @@
         },
         "bingMapsQueryKey": {
             "type": "string",
-            "value": "[listSecrets(variables('bingMapsName'), variables('bingMapsVersion')).QueryKey]"
+            "value": "[parameters('mapKey')]"
         },
         "storageConnectionString": {
             "type": "string",
