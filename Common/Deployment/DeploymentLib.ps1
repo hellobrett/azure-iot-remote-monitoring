@@ -651,19 +651,23 @@ function GetAADTenant()
         $index = 1
         foreach ($tenantObj in $tenants)
         {
-            $tenant = $tenantObj.TenantId
-            $uri = "https://graph.windows.net/{0}/me?api-version=1.6" -f $tenant
-            $authResult = GetAuthenticationResult $tenant $global:aadLoginUrl "https://graph.windows.net/" $global:AzureAccountName -Prompt "Auto"
-            $header = $authResult.CreateAuthorizationHeader()
-            $result = Invoke-RestMethod -Method "GET" -Uri $uri -Headers @{"Authorization"=$header;"Content-Type"="application/json"}
-            if ($result -ne $null)
-            {
-                $directory = New-Object System.Object
-                $directory | Add-Member -MemberType NoteProperty -Name "Option" -Value $index
-                $directory | Add-Member -MemberType NoteProperty -Name "Directory Name" -Value ($result.userPrincipalName.Split('@')[1])
-                $directory | Add-Member -MemberType NoteProperty -Name "Tenant Id" -Value $tenant
-                $directories += $directory
-                $index += 1
+            try {
+                $tenant = $tenantObj.TenantId
+                $uri = "https://graph.windows.net/{0}/me?api-version=1.6" -f $tenant
+                $authResult = GetAuthenticationResult $tenant $global:aadLoginUrl "https://graph.windows.net/" $global:AzureAccountName -Prompt "Auto"
+                $header = $authResult.CreateAuthorizationHeader()
+                $result = Invoke-RestMethod -Method "GET" -Uri $uri -Headers @{"Authorization"=$header;"Content-Type"="application/json"}
+                if ($result -ne $null)
+                {
+                    $directory = New-Object System.Object
+                    $directory | Add-Member -MemberType NoteProperty -Name "Option" -Value $index
+                    $directory | Add-Member -MemberType NoteProperty -Name "Directory Name" -Value ($result.userPrincipalName.Split('@')[1])
+                    $directory | Add-Member -MemberType NoteProperty -Name "Tenant Id" -Value $tenant
+                    $directories += $directory
+                    $index += 1
+                }
+            } catch {
+                Write-Warning "Error reading tenant $tenant.  Skipping..." 
             }
         }
 
