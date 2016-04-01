@@ -109,10 +109,10 @@ if ($cloudDeploy)
     FixWebJobZip ("$projectRoot\WebJobHost\obj\{0}\Package\WebJobHost.zip" -f $configuration)
     $webJobPackage = UploadFile ("$projectRoot\WebJobHost\obj\{0}\Package\WebJobHost.zip" -f $configuration) $storageAccount.StorageAccountName $resourceGroupName "WebDeploy" -secure $true
     $params += @{webJobPackageUri=$webJobPackage}
+    $params += @{mapKey=$($mapKey)}
     # Respect existing Sku values
     if ($suiteExists)
     {
-        $params += @{mapKey=$($mapKey)}
         $webSku = GetResourceObject $suitename $suitename Microsoft.Web/sites
         $params += @{webSku=$($webSku.Properties.Sku)}
         $webPlan = GetResourceObject $suiteName ("{0}-plan" -f $suiteName) Microsoft.Web/serverfarms
