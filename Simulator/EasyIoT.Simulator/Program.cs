@@ -14,7 +14,7 @@ namespace EasyIoT.Simulator
             {
 
                 Device device = new Device();
-                device.Start();
+                device.Start().Wait();
             }
             catch (AggregateException ae)
             {

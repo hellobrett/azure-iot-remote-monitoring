@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -33,17 +34,19 @@ namespace EasyIoT.Simulator
             _deviceClient = DeviceClient.Create(uri, new DeviceAuthenticationWithRegistrySymmetricKey(_id, key));
         }
 
-        public void Start()
+        public async Task Start()
         {
             int dueTime = _enabled ? 0 : Timeout.Infinite;
             int period = _enabled ? _interval : Timeout.Infinite;
             _timer = new Timer(Update, null, dueTime, period);
-            while (true)
+            await Task.Run(() =>
             {
-                Console.WriteLine(String.Format("Heartbeat: {0}", _id));
-                Thread.Sleep(10000);
-            }
-
+                while (true)
+                {
+                    Console.WriteLine(String.Format("Heartbeat: {0}", _id));
+                    Thread.Sleep(10000);
+                }
+            });
         }
 
         protected virtual void Update(object state)
@@ -69,5 +72,54 @@ namespace EasyIoT.Simulator
             _deviceClient.SendEventAsync(message);
             Console.WriteLine("Sending message: {0}", messageString);
         }
+
+        /*
+        public async Task Start()
+        {
+            int dueTime = _enabled ? 0 : Timeout.Infinite;
+            int period = _enabled ? _interval : Timeout.Infinite;
+            _timer = new Timer(Update, null, dueTime, period);
+            while (true)
+            {
+                // check for messages
+                Message receivedMessage = await _deviceClient.ReceiveAsync(new TimeSpan(0, 0, 60));
+                if (receivedMessage == null) continue;
+                HandleMessage(receivedMessage);
+                await _deviceClient.CompleteAsync(receivedMessage);
+            }
+        }
+
+        private void HandleMessage(Message receivedMessage)
+        {
+            try
+            {
+                Console.WriteLine("HandleMessage()");
+                using (TextReader reader = new StreamReader(receivedMessage.GetBodyStream()))
+                {
+                    Command command = JsonConvert.DeserializeObject<Command>(reader.ReadToEnd());
+                    if (command != null)
+                    {
+                        switch (command.Name)
+                        {
+                            case "Enable":
+                                _timer.Change(0, _interval);
+                                _enabled = true;
+                                break;
+                            case "Disable":
+                                _timer.Change(Timeout.Infinite, Timeout.Infinite);
+                                _enabled = false;
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error processing command: " + e.Message);
+            }
+        }
+        */
     }
 }
